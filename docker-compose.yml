@@ -1,0 +1,44 @@
+version: '3.4'
+
+volumes:
+  tailscale-dotnet:
+  tailscale-dotnet-worker:
+
+services:
+  tailscale-dotnet:
+    image: tailscale_dotnet:${TAG:-latest}
+    container_name: tailscale-dotnet
+    ports:
+      - "8080:80"
+    build:
+      context: .
+      dockerfile: ./TailscaleAndDotnet/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=DEVELOPMENT
+      - TS_AUTHKEY=$TS_AUTHKEY
+      - TS_HOSTNAME=tailscale-dotnet
+    network_mode: "bridge"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - tailscale-dotnet:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+      
+  tailscale-dotnet-worker:
+    image: tailscale_dotnet_worker:${TAG:-latest}
+    container_name: tailscale-dotnet-worker
+    build:
+      context: .
+      dockerfile: ./TailscaleWorker/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=DEVELOPMENT
+      - TS_AUTHKEY=$TS_AUTHKEY
+      - TS_HOSTNAME=tailscale-dotnet-worker
+    network_mode: "bridge"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - tailscale-dotnet-worker:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
